@@ -1,0 +1,3 @@
+/creators/*  /creator  200
+/news/*      /news-detail  200
+/admin       /admin/  301
