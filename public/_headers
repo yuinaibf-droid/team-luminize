@@ -9,4 +9,4 @@
   Cache-Control: no-store
 
 /assets/*
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=0, must-revalidate
