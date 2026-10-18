@@ -1,6 +1,6 @@
 // Team Luminize API（Cloudflare Pages Functions）
 // /api/* へのリクエストをすべてここで処理します。
-import { json, error, readJson, HttpError, parseJson, cleanLinks, str, bool, int, imageUrl, slugify } from '../../src/server/util.js';
+import { json, error, readJson, HttpError, parseJson, cleanLinks, cleanProfile, str, bool, int, imageUrl, slugify } from '../../src/server/util.js';
 import { checkPassword, createSessionCookie, clearSessionCookie, isAuthed } from '../../src/server/auth.js';
 import { syncAllVideos, resolveChannelId, fetchLatestVideos } from '../../src/server/youtube.js';
 
@@ -30,7 +30,7 @@ export async function onRequest(context) {
 
 const CREATOR_LIST_COLS = 'id, slug, name, name_en, role, catchphrase, avatar, color, links, sort_order';
 
-const mapCreator = (c) => c && { ...c, links: parseJson(c.links, []) };
+const mapCreator = (c) => c && { ...c, links: parseJson(c.links, []), profile: parseJson(c.profile, []) };
 const mapWork = (w) => w && { ...w, creator_ids: parseJson(w.creator_ids, []) };
 
 async function getSettings(env) {
@@ -162,6 +162,7 @@ const TABLES = {
       color: /^#[0-9a-f]{6}$/i.test(b.color) ? b.color : '#9b4dea',
       youtube_channel_id: /^UC[\w-]{22}$/.test(str(b.youtube_channel_id)) ? str(b.youtube_channel_id) : '',
       links: JSON.stringify(cleanLinks(b.links)),
+      profile: JSON.stringify(cleanProfile(b.profile)),
       sort_order: int(b.sort_order),
       is_published: bool(b.is_published),
     }),
@@ -319,6 +320,8 @@ async function crud(env, table, id, method, request) {
       return json({ item: t.out(row) });
     } catch (e) {
       if (String(e.message).includes('UNIQUE')) throw new HttpError(409, 'そのURL用IDはすでに使われています');
+      if (String(e.message).includes('no column named profile') || String(e.message).includes('no such column: profile'))
+        throw new HttpError(500, 'データベースに profile 列がありません。D1 の Console で migrate-001-profile.sql を実行してください');
       throw e;
     }
   }

@@ -135,3 +135,5 @@ a { color: inherit; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 .row span.thumb { color: #fff; }
+.prof-row { grid-template-columns: 180px 1fr auto; }
+@media (max-width: 640px) { .prof-row { grid-template-columns: 1fr auto; } .prof-row input[name=pvalue] { grid-column: 1 / -1; order: 2; } }

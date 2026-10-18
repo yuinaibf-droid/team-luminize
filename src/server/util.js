@@ -45,3 +45,12 @@ export const imageUrl = (v) => {
 
 export const slugify = (v) =>
   str(v, 60).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+
+// プロフィール項目（誕生日・趣味・特技など。項目名は自由）
+export function cleanProfile(items) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((i) => ({ label: str(i?.label, 40), value: str(i?.value, 500) }))
+    .filter((i) => i.label && i.value)
+    .slice(0, 30);
+}

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS creators (
   color         TEXT DEFAULT '#9b4dea',        -- メンバーカラー
   youtube_channel_id TEXT DEFAULT '',          -- UCから始まるチャンネルID
   links         TEXT DEFAULT '[]',             -- SNSリンク JSON: [{"type":"x","url":"..."}]
+  profile       TEXT DEFAULT '[]',             -- プロフィール項目 JSON: [{"label":"誕生日","value":"4月1日"}]
   sort_order    INTEGER DEFAULT 0,
   is_published  INTEGER DEFAULT 1,
   created_at    TEXT DEFAULT (datetime('now')),

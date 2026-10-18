@@ -133,6 +133,17 @@ npm run dev                        # → http://localhost:8788
 
 ---
 
+## データベースの更新（アップデート時）
+
+| ファイル | いつ実行するか |
+|---|---|
+| `setup.sql` | 最初の1回だけ（表の作成＋サンプルデータ） |
+| `migrate-001-profile.sql` | 「プロフィール項目（誕生日・趣味・特技など）」追加前に setup.sql を実行した場合に1回だけ |
+
+どちらも Cloudflare → D1 → luminize-db → Console に貼り付けて Execute します。
+
+---
+
 ## 仕組みのメモ
 
 ### YouTubeの横動画だけを取る方法

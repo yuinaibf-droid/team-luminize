@@ -73,6 +73,9 @@ const fieldHtml = (f, v) => {
             <input type="url" name="${f.k}" value="${esc(v)}" placeholder="または画像URLを貼り付け">
           </div>
         </div>${hint}</div>`;
+    case 'profile':
+      return `<div class="${cls}"><label>${f.label}</label><div class="links" data-profile="${f.k}"></div>
+        <button type="button" class="b b-sm" data-add-prof="${f.k}" style="margin-top:8px">＋ 項目を追加</button>${hint}</div>`;
     case 'links':
       return `<div class="${cls}"><label>${f.label}</label><div class="links" data-links="${f.k}"></div>
         <button type="button" class="b b-sm" data-add-link="${f.k}" style="margin-top:8px">＋ リンクを追加</button>${hint}</div>`;
@@ -92,6 +95,14 @@ const fieldHtml = (f, v) => {
   }
 };
 
+const PROFILE_PRESETS = ['誕生日', '身長', '出身地', '趣味', '特技', '好きなもの'];
+const profRow = (p = { label: '', value: '' }) => `
+  <div class="link-row prof-row">
+    <input name="plabel" value="${esc(p.label)}" placeholder="項目名（例：誕生日）" aria-label="項目名" list="prof-presets">
+    <input name="pvalue" value="${esc(p.value)}" placeholder="内容（例：4月1日）" aria-label="内容">
+    <button type="button" class="b" data-del-link aria-label="この項目を削除">✕</button>
+  </div>`;
+
 const linkRow = (l = { type: 'x', url: '', label: '' }) => `
   <div class="link-row">
     <select name="type" aria-label="種類">${LINK_TYPES.map(([k, n]) => `<option value="${k}" ${k === l.type ? 'selected' : ''}>${n}</option>`).join('')}</select>
@@ -101,11 +112,19 @@ const linkRow = (l = { type: 'x', url: '', label: '' }) => `
   </div>`;
 
 function bindFormParts(root, values) {
+  $$('[data-profile]', root).forEach((box) => {
+    const list = values[box.dataset.profile] || [];
+    // 未入力のときは、よく使う項目をあらかじめ並べておく（内容が空の行は保存されません）
+    box.innerHTML = (list.length ? list : PROFILE_PRESETS.map((label) => ({ label, value: '' }))).map(profRow).join('')
+      + `<datalist id="prof-presets">${PROFILE_PRESETS.map((p) => `<option value="${p}">`).join('')}</datalist>`;
+  });
   $$('[data-links]', root).forEach((box) => {
     const list = values[box.dataset.links] || [];
     box.innerHTML = list.map(linkRow).join('');
   });
   root.addEventListener('click', async (e) => {
+    const addP = e.target.closest('[data-add-prof]');
+    if (addP) $(`[data-profile="${addP.dataset.addProf}"]`, root).insertAdjacentHTML('beforeend', profRow());
     const add = e.target.closest('[data-add-link]');
     if (add) $(`[data-links="${add.dataset.addLink}"]`, root).insertAdjacentHTML('beforeend', linkRow());
     const del = e.target.closest('[data-del-link]');
@@ -158,6 +177,9 @@ function collect(root, fields) {
   const out = {};
   for (const f of fields) {
     if (f.type === 'check') out[f.k] = $(`[name=${f.k}]`, root).checked;
+    else if (f.type === 'profile') out[f.k] = $$(`[data-profile="${f.k}"] .prof-row`, root).map((r) => ({
+      label: $('[name=plabel]', r).value.trim(), value: $('[name=pvalue]', r).value.trim(),
+    })).filter((p) => p.label && p.value);
     else if (f.type === 'links') out[f.k] = $$(`[data-links="${f.k}"] .link-row`, root).map((r) => ({
       type: $('[name=type]', r).value, url: $('[name=url]', r).value.trim(), label: $('[name=label]', r).value.trim(),
     })).filter((l) => l.url);
@@ -172,7 +194,7 @@ const SECTIONS = {
   creators: {
     title: 'クリエイター', single: 'クリエイター',
     desc: '所属クリエイターのプロフィール・SNSリンク・YouTubeチャンネルを管理します。',
-    blank: { color: '#9b4dea', is_published: true, links: [], sort_order: 0 },
+    blank: { color: '#9b4dea', is_published: true, links: [], profile: [], sort_order: 0 },
     fields: [
       { k: 'name', label: '名前', req: true },
       { k: 'name_en', label: '英字表記', ph: 'Hikari' },
@@ -181,6 +203,7 @@ const SECTIONS = {
       { k: 'catchphrase', label: 'ひとこと', full: true },
       { k: 'avatar', type: 'image', label: 'アイコン画像', round: true, full: true, hint: '正方形の画像がおすすめです。アップロード時に自動で縮小されます' },
       { k: 'bio', type: 'textarea', label: '紹介文', full: true },
+      { k: 'profile', type: 'profile', label: 'プロフィール項目', full: true, hint: '誕生日・趣味・特技など。項目名は自由に変えられます。内容が空の行は表示されません' },
       { k: 'links', type: 'links', label: 'SNSリンク', full: true, hint: '上から順にボタンとして表示されます。URLを変えて保存すればすぐサイトに反映されます' },
       { k: 'youtube_channel_id', type: 'channel', full: true },
       { k: 'color', type: 'color', label: 'メンバーカラー' },

@@ -29,11 +29,14 @@ const slug = decodeURIComponent(location.pathname.split('/creators/')[1] || new 
         </div>
       </section>
 
-      ${c.bio ? `
+      ${c.bio || (c.profile || []).length ? `
       <section class="section">
         <div class="wrap">
           <div class="sec-head"><h2 class="sec-title"><span>Profile</span><small>プロフィール</small></h2></div>
-          <p class="bio">${esc(c.bio)}</p>
+          <div class="profile-body">
+            ${(c.profile || []).length ? `<dl class="prof-list">${c.profile.map((p) => `<div><dt>${esc(p.label)}</dt><dd>${esc(p.value)}</dd></div>`).join('')}</dl>` : ''}
+            ${c.bio ? `<p class="bio">${esc(c.bio)}</p>` : ''}
+          </div>
         </div>
       </section>` : ''}
 
