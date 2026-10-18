@@ -17,6 +17,30 @@ export const fmtDate = (s) => {
 };
 
 // URLをリンク化（本文用。esc済みテキストに適用）
+// 本文の画像行（![説明](URL)）を取り除いた短い文（一覧用）
+export const plainText = (s = '') =>
+  String(s).split('\n').filter((l) => !IMG_LINE.test(l.trim())).join(' ').replace(/\s+/g, ' ').trim();
+
+const IMG_LINE = /^!\[([^\]]*)\]\(((?:\/api\/images\/[a-z0-9]+)|(?:https?:\/\/[^\s)]+))\)$/i;
+
+// 本文を表示用HTMLにする：画像の行は画像に、それ以外は段落に（URLは自動リンク）
+export function renderBody(text = '') {
+  const out = [];
+  let para = [];
+  const flush = () => { if (para.length) { out.push(`<p>${para.map((l) => linkify(esc(l))).join('<br>')}</p>`); para = []; } };
+  for (const raw of String(text).split('\n')) {
+    const line = raw.trim();
+    const m = line.match(IMG_LINE);
+    if (m) {
+      flush();
+      out.push(`<figure><img src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">${m[1] ? `<figcaption>${esc(m[1])}</figcaption>` : ''}</figure>`);
+    } else if (!line) flush();
+    else para.push(raw);
+  }
+  flush();
+  return out.join('');
+}
+
 export const linkify = (escaped) =>
   escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 
@@ -83,17 +107,17 @@ export const workItem = (w, creatorsById) => {
   const people = (w.creator_ids || []).map((id) => creatorsById[id]).filter(Boolean);
   return `
   <article class="work">
-    <div class="work-thumb">${w.thumbnail ? `<img src="${esc(w.thumbnail)}" alt="" loading="lazy">` : ''}</div>
+    <a class="work-thumb" href="/works/${w.id}" tabindex="-1" aria-hidden="true">${w.thumbnail ? `<img src="${esc(w.thumbnail)}" alt="" loading="lazy">` : ''}</a>
     <div>
       ${w.category ? `<span class="chip">${esc(w.category)}</span>` : ''}
-      <h3>${esc(w.title)}</h3>
-      ${w.description ? `<p>${esc(w.description)}</p>` : ''}
+      <h3><a class="work-link" href="/works/${w.id}">${esc(w.title)}</a></h3>
+      ${w.description ? `<p class="work-desc">${esc(plainText(w.description))}</p>` : ''}
       ${people.length ? `<div class="work-people">${people.map((c) => `<a href="/creators/${encodeURIComponent(c.slug)}">${esc(c.name)}</a>`).join('')}</div>` : ''}
     </div>
     <div class="work-side">
       ${w.client ? `<div>${esc(w.client)}</div>` : ''}
       ${w.work_date ? `<div>${esc(w.work_date)}</div>` : ''}
-      ${w.url ? `<a href="${esc(w.url)}" target="_blank" rel="noopener">詳しく見る</a>` : ''}
+      <a href="/works/${w.id}">詳しく見る</a>
     </div>
   </article>`;
 };

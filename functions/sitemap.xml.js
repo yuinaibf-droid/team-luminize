@@ -7,11 +7,14 @@ export async function onRequest({ request, env }) {
     { loc: `${origin}/news`, priority: '0.6' },
   ];
   try {
-    const [creators, news] = await Promise.all([
+    const [creators, news, works] = await Promise.all([
       env.DB.prepare('SELECT slug, updated_at FROM creators WHERE is_published = 1 ORDER BY sort_order, id').all(),
       env.DB.prepare('SELECT id, published_at FROM news WHERE is_published = 1 ORDER BY published_at DESC LIMIT 200').all(),
+      env.DB.prepare('SELECT id, updated_at FROM works WHERE is_published = 1 ORDER BY id DESC LIMIT 200').all(),
     ]);
     for (const c of creators.results) urls.push({ loc: `${origin}/creators/${encodeURIComponent(c.slug)}`, lastmod: (c.updated_at || '').slice(0, 10), priority: '0.8' });
+    urls.push({ loc: `${origin}/works`, priority: '0.6' });
+    for (const w of works.results) urls.push({ loc: `${origin}/works/${w.id}`, lastmod: (w.updated_at || '').slice(0, 10), priority: '0.5' });
     for (const n of news.results) urls.push({ loc: `${origin}/news/${n.id}`, lastmod: (n.published_at || '').slice(0, 10), priority: '0.5' });
   } catch (e) {
     console.error('sitemap', e);

@@ -137,3 +137,5 @@ a { color: inherit; }
 .row span.thumb { color: #fff; }
 .prof-row { grid-template-columns: 180px 1fr auto; }
 @media (max-width: 640px) { .prof-row { grid-template-columns: 1fr auto; } .prof-row input[name=pvalue] { grid-column: 1 / -1; order: 2; } }
+.body-tools { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.body-tools .b { margin: 0; }

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>実績 | Team Luminize</title>
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="site-header" data-header></header>
+  <main>
+    <section class="page-head"><div class="wrap"><h1 class="sec-title"><span>Works</span><small>実績</small></h1></div></section>
+    <section class="wrap" style="padding-bottom:120px"><div class="works-list" data-works><div class="loading">読み込み中…</div></div></section>
+  </main>
+  <footer class="site-footer" data-footer></footer>
+  <script type="module">
+    import { api, esc, renderChrome, workItem } from '/assets/js/common.js';
+    renderChrome();
+    const box = document.querySelector('[data-works]');
+    Promise.all([api('works'), api('site')]).then(([{ works }, { creators }]) => {
+      const byId = Object.fromEntries(creators.map((c) => [c.id, c]));
+      box.innerHTML = works.length ? works.map((w) => workItem(w, byId)).join('') : '<p class="empty">実績は準備中です。</p>';
+    }).catch((e) => { box.innerHTML = `<p class="empty">${esc(e.message)}</p>`; });
+  </script>
+</body>
+</html>

@@ -17,7 +17,7 @@
   <main class="article"><div class="wrap" data-article><div class="loading">読み込み中…</div></div></main>
   <footer class="site-footer" data-footer></footer>
   <script type="module">
-    import { api, esc, fmtDate, linkify, renderChrome } from '/assets/js/common.js';
+    import { api, esc, fmtDate, renderBody, renderChrome } from '/assets/js/common.js';
     renderChrome();
     const el = document.querySelector('[data-article]');
     const id = location.pathname.split('/news/')[1] || new URLSearchParams(location.search).get('id');
@@ -27,7 +27,7 @@
         <div class="meta"><time datetime="${esc(n.published_at)}">${fmtDate(n.published_at)}</time><span class="chip">${esc(n.category)}</span></div>
         <h1>${esc(n.title)}</h1>
         ${n.thumbnail ? `<div class="thumb"><img src="${esc(n.thumbnail)}" alt=""></div>` : ''}
-        <div class="body">${linkify(esc(n.body))}</div>
+        <div class="body">${renderBody(n.body)}</div>
         <a class="more back" href="/news">お知らせ一覧へ戻る</a>`;
     }).catch((e) => { el.innerHTML = `<p class="empty">${esc(e.message)}</p><a class="more back" href="/news">お知らせ一覧へ戻る</a>`; });
   </script>

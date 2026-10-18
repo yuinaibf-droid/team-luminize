@@ -57,7 +57,10 @@ const fieldHtml = (f, v) => {
   const req = f.req ? ' required' : '';
   switch (f.type) {
     case 'textarea':
-      return `<div class="${cls}"><label for="${id}">${f.label}</label><textarea id="${id}" name="${f.k}" rows="${f.rows || 6}">${esc(v)}</textarea>${hint}</div>`;
+      return `<div class="${cls}"><label for="${id}">${f.label}</label>${f.images ? `
+        <div class="body-tools"><label class="b b-sm">🖼 画像を挿入<input type="file" accept="image/*" multiple hidden data-body-file="${f.k}"></label>
+        <span class="hint" style="margin:0">カーソルの位置に画像が入ります（複数選択OK）</span></div>` : ''}
+        <textarea id="${id}" name="${f.k}" rows="${f.rows || 6}">${esc(v)}</textarea>${hint}</div>`;
     case 'check':
       return `<div class="${cls}"><label class="check"><input type="checkbox" name="${f.k}" ${v ? 'checked' : ''}> ${f.label}</label>${hint}</div>`;
     case 'color':
@@ -152,6 +155,25 @@ function bindFormParts(root, values) {
     }
   });
   root.addEventListener('change', async (e) => {
+    if (e.target.matches('[data-body-file]')) {
+      const ta = $(`[name=${e.target.dataset.bodyFile}]`, root);
+      const files = [...e.target.files];
+      e.target.value = '';
+      for (const [i, file] of files.entries()) {
+        try {
+          toast(`画像をアップロード中…（${i + 1}/${files.length}）`);
+          const url = await uploadImage(file, 1600);
+          const pos = ta.selectionStart ?? ta.value.length;
+          const before = ta.value.slice(0, pos), after = ta.value.slice(pos);
+          const ins = `${before && !before.endsWith('\n') ? '\n' : ''}![](${url})\n`;
+          ta.value = before + ins + after;
+          ta.selectionStart = ta.selectionEnd = pos + ins.length;
+        } catch (err) { toast(err.message, true); return; }
+      }
+      toast('画像を挿入しました。保存すると反映されます');
+      ta.focus();
+      return;
+    }
     if (!e.target.matches('[data-file]')) return;
     const box = e.target.closest('[data-img]');
     const file = e.target.files[0];
@@ -229,7 +251,7 @@ const SECTIONS = {
       { k: 'category', type: 'select', label: 'カテゴリ', options: ['お知らせ', 'メディア', 'イベント', 'グッズ', '所属', 'その他'] },
       { k: 'published_at', type: 'date', label: '公開日' },
       { k: 'thumbnail', type: 'image', label: 'サムネイル（任意）', full: true },
-      { k: 'body', type: 'textarea', label: '本文', full: true, rows: 12, hint: '改行はそのまま反映されます。URLは自動でリンクになります' },
+      { k: 'body', type: 'textarea', label: '本文', full: true, rows: 14, images: true, hint: '改行はそのまま反映されます。URLは自動でリンクになります。![説明](画像URL) の行が画像になり、[ ]の中に書いた文字は画像の下に小さく表示されます' },
       { k: 'is_published', type: 'check', label: 'サイトに公開する', full: true },
     ],
     row: (n) => `
@@ -250,7 +272,7 @@ const SECTIONS = {
       { k: 'work_date', label: '時期', ph: '2026-09' },
       { k: 'url', type: 'url', label: '関連URL', ph: 'https://' },
       { k: 'thumbnail', type: 'image', label: 'サムネイル（任意）', full: true },
-      { k: 'description', type: 'textarea', label: '説明', full: true, rows: 4 },
+      { k: 'description', type: 'textarea', label: '本文', full: true, rows: 14, images: true, hint: '実績の記事ページに表示されます（一覧には最初の2行だけ表示）。画像も入れられます' },
       { k: 'creator_ids', type: 'creators', label: '関わったクリエイター', full: true },
       { k: 'sort_order', type: 'number', label: '表示順', hint: '小さい数字ほど前に表示' },
       { k: 'is_published', type: 'check', label: 'サイトに公開する' },

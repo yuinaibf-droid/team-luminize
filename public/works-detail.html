@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>実績 | Team Luminize</title>
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="/assets/img/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/img/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <header class="site-header" data-header></header>
+  <main class="article"><div class="wrap" data-article><div class="loading">読み込み中…</div></div></main>
+  <footer class="site-footer" data-footer></footer>
+  <script type="module">
+    import { api, esc, renderBody, renderChrome } from '/assets/js/common.js';
+    renderChrome();
+    const el = document.querySelector('[data-article]');
+    const id = location.pathname.split('/works/')[1] || new URLSearchParams(location.search).get('id');
+    api(`works/${encodeURIComponent(id)}`).then(({ work: w, creators }) => {
+      document.title = `${w.title} | Team Luminize`;
+      const meta = [w.client, w.work_date].filter(Boolean).map((x) => `<span>${esc(x)}</span>`).join('');
+      el.innerHTML = `
+        <div class="meta">${w.category ? `<span class="chip">${esc(w.category)}</span>` : ''}${meta}</div>
+        <h1>${esc(w.title)}</h1>
+        ${w.thumbnail ? `<div class="thumb"><img src="${esc(w.thumbnail)}" alt=""></div>` : ''}
+        <div class="body">${renderBody(w.description)}</div>
+        ${w.url ? `<p class="article-link"><a class="btn" href="${esc(w.url)}" target="_blank" rel="noopener">関連リンクを開く</a></p>` : ''}
+        ${creators.length ? `<div class="article-people"><h2>参加クリエイター</h2><div class="others">${creators.map((c) => `
+          <a class="creator-card" href="/creators/${encodeURIComponent(c.slug)}" style="--c:${esc(c.color)}">
+            <div class="ring">${c.avatar ? `<img src="${esc(c.avatar)}" alt="">` : `<span class="avatar-fallback">${esc((c.name_en || c.name).charAt(0).toUpperCase())}</span>`}</div>
+            <h3>${esc(c.name)}</h3></a>`).join('')}</div></div>` : ''}
+        <a class="more back" href="/works">実績一覧へ戻る</a>`;
+    }).catch((e) => { el.innerHTML = `<p class="empty">${esc(e.message)}</p><a class="more back" href="/works">実績一覧へ戻る</a>`; });
+  </script>
+</body>
+</html>

@@ -129,6 +129,18 @@ async function publicRoutes(context, path, url) {
     return json({ news: results });
   }
 
+  if (res === 'works' && id) {
+    const w = await env.DB.prepare('SELECT * FROM works WHERE id = ? AND is_published = 1').bind(int(id)).first();
+    if (!w) return error('実績が見つかりません', 404);
+    const work = mapWork(w);
+    let creators = [];
+    if (work.creator_ids.length) {
+      const q = work.creator_ids.map(() => '?').join(',');
+      creators = (await env.DB.prepare(`SELECT ${CREATOR_LIST_COLS} FROM creators WHERE is_published = 1 AND id IN (${q}) ORDER BY sort_order, id`).bind(...work.creator_ids).all()).results.map(mapCreator);
+    }
+    return json({ work, creators });
+  }
+
   if (res === 'works') {
     const { results } = await env.DB.prepare('SELECT * FROM works WHERE is_published = 1 ORDER BY sort_order, work_date DESC, id DESC').all();
     return json({ works: results.map(mapWork) });
