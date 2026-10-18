@@ -1,0 +1,9 @@
+name = "team-luminize"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "luminize-db"
+# ↓ `npx wrangler d1 create luminize-db` を実行すると表示される database_id に置き換えてください
+database_id = "bba7a9b8-c620-43c8-ba06-e41c60c2d3ab"
